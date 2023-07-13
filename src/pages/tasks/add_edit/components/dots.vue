@@ -9,7 +9,7 @@
         <label>Посещаемый город</label>
         <el-select
             v-model="city"
-            :class="['add-edit-element']"
+            :class="['add-edit-element', {'invalid' : errors.add_city_dot}]"
             filterable
             remote
             reserve-keyword
@@ -24,6 +24,7 @@
           >
           </el-option>
         </el-select>
+        <small v-if="errors.add_city_dot">{{errors.add_city_dot}}</small>
       </el-col>
       <el-col :span="4">
         <label><br/></label>
@@ -48,7 +49,8 @@
                 </label>
                 <el-input
                     v-model="value.dots[page].days"
-                    @input="value.dots[page].days = String(value.dots[page].days).replace(/[^\d]/ig, '')"
+                    @input="value.dots[page].days = (value.dots[page].days).replace(/[^\d.]/ig, '')"
+                    @change="value.dots[page].days = parseFloat(value.dots[page].days)"
                     :class="['add-edit-element']"
                     placeholder="Введите количество дней"
                 >
@@ -73,7 +75,9 @@
                 </label>
                 <el-input
                     v-model="value.dots[page].sort"
-                    @input="value.dots[page].sort = String(value.dots[page].sort).replace(/[^\d.]/ig, '')"
+                    @input="value.dots[page].sort = (value.dots[page].sort).replace(/[^\d.]/ig, '')"
+
+
                     :class="['add-edit-element']"
                     placeholder="Введите число для сортировки"
                 >
@@ -188,10 +192,10 @@
 </template>
 
 <script>
-import {ref, inject, reactive} from "vue";
+import {ref, inject, reactive, watchEffect} from "vue";
 export default {
-  name: "addTripDots",
-  props:['value'],
+  name  : "addTripDots",
+  props :['value'],
   setup(props){
     const loadJson    = inject('loadJson');
     const svg         = inject('svg');
@@ -220,11 +224,6 @@ export default {
           result.data.forEach(el => citiesList.push(el));
         };
 
-        // if (key === 'target') {
-        //   targetsList.length = 0;
-        //   result.data.forEach(el => targetsList.push(el));
-        // };
-
       };
       loading.value = false;
     };
@@ -249,7 +248,7 @@ export default {
           city      : { name, region },
         });
         city.value = null;
-      };
+      } else {errors.add_city_dot = 'Необходимо выбрать город'};
     };
 
     function addTarget(idx){
@@ -269,6 +268,10 @@ export default {
     function deleteTask(idx){
       props.value.dots[page.value].targets.splice(idx, 1);
     }
+
+    watchEffect(() => {
+      city.value ? errors.add_city_dot = null : '';
+    })
 
     return {
       page, city, svg, loading, citiesList, targetsList, errors,

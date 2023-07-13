@@ -37,7 +37,7 @@ import moment from 'moment'
 import {inject, ref, reactive} from 'vue'
 import { useRouter, useRoute } from 'vue-router';
 export default {
-  name: "logs",
+  name : "logs",
   setup(){
     const route             = useRoute();
 

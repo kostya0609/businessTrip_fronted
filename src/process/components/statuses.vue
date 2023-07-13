@@ -23,9 +23,7 @@ export default {
       let   activeStatus  = ref(0);
 
       watch([process, statuses], () => {
-        // console.log(process)
-        // console.log(statuses)
-        if(process.id && statuses.length>0){
+        if(process.id && statuses.length>0 && process.status_current){
           activeStatus.value = statuses.findIndex(item=>item.id == process.status_current);
           if(statuses.length == activeStatus.value+1){
             ++activeStatus.value
@@ -33,11 +31,8 @@ export default {
         } else {
           activeStatus.value = 0
         }
-          
       })
-
       return {statuses, process, activeStatus};
-
     }
 }
 </script>

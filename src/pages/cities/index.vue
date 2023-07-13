@@ -20,11 +20,35 @@
         <el-col :span="4" align="right">
           <el-switch
               v-model="activeCities"
-              active-text="Active"
-              inactive-text="Inactive"
+              active-text="Актив."
+              inactive-text="Не актив."
           />
         </el-col>
       </el-row>
+      <br/>
+
+      <el-row>
+        <el-col :span="12">
+          <el-select
+              v-model="find_city.id"
+              :class="['add-edit-element']"
+              filterable
+              remote
+              reserve-keyword
+              :remote-method="findCity"
+              placeholder="Поиск города в базе по названию"
+          >
+            <el-option
+                v-for="item in find_city.list"
+                :key="item.value"
+                :label="`ID - ${item.value}, ${item.label}, население - ${item.population}`"
+                :value="item.value"
+            >
+            </el-option>
+          </el-select>
+        </el-col>
+      </el-row>
+
       <br/>
       <el-table :data="cities" style="width: 100%" border max-height="600" stripe>
         <el-table-column prop="id" label="ID" width="70" />
@@ -56,7 +80,9 @@
           </template>
         </el-table-column>
       </el-table>
+
       <br/>
+
       <el-pagination
           v-model:current-page="currentPage"
           v-model:page-size="pageSize"
@@ -89,12 +115,19 @@ export default {
     const user         = inject('user');
     const loading      = ref(false);
 
+    user.roles.indexOf('admin') >= 0 ? '' : router.push({name : 'listTasks'});
+
     const currentPage  = ref(1);
     const pageSize     = ref(10);
     const total        = ref(1000);
     const sort         = reactive({name : 'id', order : 'asc' });
     const activeCities = ref(true);
     const cities       = reactive([]);
+
+    const find_city    = reactive({
+      id   : null,
+      list : [],
+    })
 
     const handleSizeChange = (val) => {
       pageSize.value = val;
@@ -121,9 +154,7 @@ export default {
     getData();
 
     function cityEdit(idx, row){
-      console.log('Редактирование')
-      console.log('строка', row );
-      router.push({name:'editCity', params: { id: idx }});
+      router.push({name:'editCity', params: { id: row.id }});
     }
 
     async function changeActive(idx, row){
@@ -142,6 +173,22 @@ export default {
             cities[idx].active = !cities[idx].active;
           })
     }
+
+    function findCity(query){
+      let url = '/business-trip/search/city';
+      if (query !== '')
+        search(query,'find_city', url);
+    };
+
+    async function search(query, key, url){
+      loading.value = true;
+      let result = await loadJson(url, {q: query, limit : 30, population : true});
+      if (result.status === 'success' && result.data) {
+        if (key === 'find_city') find_city.list = result.data;
+      };
+      loading.value = false;
+    };
+
     watch(
         () => activeCities.value,
         (value) => {currentPage.value = 1; getData()}
@@ -149,8 +196,8 @@ export default {
 
 
     return{
-      loading, svg, currentPage, pageSize, total, cities, Check, Close, activeCities,
-      handleSizeChange, handleCurrentChange, cityEdit, changeActive,
+      loading, svg, currentPage, pageSize, total, cities, Check, Close, activeCities, find_city,
+      handleSizeChange, handleCurrentChange, cityEdit, changeActive, findCity
     }
   }
 }

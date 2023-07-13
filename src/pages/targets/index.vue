@@ -20,8 +20,8 @@
         <el-col :span="4" align="right">
           <el-switch
               v-model="activeTargets"
-              active-text="Active"
-              inactive-text="Inactive"
+              active-text="Актив."
+              inactive-text="Не актив."
           />
         </el-col>
       </el-row>
@@ -87,8 +87,10 @@ export default {
     const svg          = inject('svg');
     const notify       = inject('notify');
     const user         = inject('user');
-    const loading      = ref(false);
 
+    user.roles.indexOf('admin') >= 0 ? '' : router.push({name : 'listTasks'});
+
+    const loading      = ref(false);
     const currentPage  = ref(1);
     const pageSize     = ref(10);
     const total        = ref(1000);
@@ -122,10 +124,7 @@ export default {
     getData();
 
     function targetEdit(idx, row){
-      console.log('Редактирование')
-      console.log('индекс', idx);
-      console.log('строка', row );
-      router.push({name:'editTarget', params: { id: idx }});
+      router.push({name:'editTarget', params: { id: row.id }});
     }
     async function changeActive(idx, row){
       ElMessageBox.confirm(`Вы уверены, что хотите ${row.active ? ' активировать ' : ' дективировать '} цель - ${row.name} ?`)

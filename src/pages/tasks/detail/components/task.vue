@@ -16,7 +16,7 @@
 
 <script>
 export default {
-  name: "detailTasks",
+  name  : "detailTasks",
   props : ['value'],
 }
 </script>

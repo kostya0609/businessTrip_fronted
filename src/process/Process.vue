@@ -1,8 +1,11 @@
 <template>
     <div class="bp">
         <div class="title mb-2">
-            {{name}}
-        </div>    
+            {{name}} <span v-if="process && process.user_name">({{ process.user_name }} - {{ process.user_department }})</span>
+            <template v-for="title, index in subtitle" :key="index">
+                <div class="subtitle">{{title}}</div>
+            </template>
+        </div>
         <Status />
         <StagesUsers v-if="!process.id" />
         <StagesUserStatus v-if="process.id" />
@@ -31,6 +34,7 @@ import Actions from './components/actions.vue'
 
 export default {
     props: [
+        'config',
         'process_id',
         'document_id',
         'user',
@@ -40,11 +44,13 @@ export default {
         emit
     }) {
 
-        provide('data',         props.data);
-        provide('process_id',   props.process_id);
-        provide('document_id',  props.document_id);
-        provide('user',         props.user);
-
+        provide('data_notify',  props.config.data_notify);
+        provide('process_id',   props.config.process_id);
+        provide('document_id',  props.config.document_id);
+        provide('user',         props.config.user);
+        provide('subtitle',     props.config.subtitle);
+        provide('full_access',  props.config.full_access);
+        let subtitle            = props.config.subtitle;
         let process             = reactive({});
         let stages_user         = reactive({});
         let statuses            = reactive([]);
@@ -72,8 +78,8 @@ export default {
         async function startfn() {
 
             var res = await req('/process/get-process-doc', {
-                document_id: props.document_id,
-                process_id: props.process_id
+                document_id: props.config.document_id,
+                process_id: props.config.process_id
             });
 
             if (res.status == 'success') {
@@ -104,7 +110,7 @@ export default {
                                 key:el.id,
                                 label:el.name,
                                 value:el.id,
-
+                                comment:el.comment
                             })
                         })
                     }
@@ -114,7 +120,7 @@ export default {
 
             var res1 = await req('/process/get-statuses', {
                 id: props.id,
-                process_id: props.process_id
+                process_id: props.config.process_id
             });
 
             if (res1.status == 'success') {
@@ -127,7 +133,7 @@ export default {
 
             var res2 = await req('/process/get-stages', {
                 id: props.id,
-                process_id: props.process_id
+                process_id: props.config.process_id
             });
 
             if (res2.status == 'success') {
@@ -138,8 +144,8 @@ export default {
             }
 
             var res3 = await req('/process/get-stages-user', {
-                document_id:props.document_id,
-                process_id:props.process_id               
+                document_id:props.config.document_id,
+                process_id:props.config.process_id
             });
 
             if (res3.status == 'success') {
@@ -185,7 +191,8 @@ export default {
             statuses,
             stages,
             stages_user,
-            name
+            name,
+            subtitle
         }
 
     },

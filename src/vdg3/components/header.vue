@@ -127,7 +127,7 @@ export default {
           h(
             resolveComponent('el-dialog'),
             {
-              'custom-class' : 'vdg_showFieldsModal',
+              class : 'vdg_showFieldsModal',
               'model-value' : this.dialogVisible,
               'onUpdate:modelValue': value => {this.dialogVisible = value},
               title : "Настройка списка",

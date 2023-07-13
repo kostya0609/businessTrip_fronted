@@ -52,7 +52,7 @@
         </el-timeline-item>
     </el-timeline>
 
-    <el-row class="fw">
+    <el-row class="fw" v-if="full_access">
         <el-button @click="startProcess" class="start-process-button mb-1">Запустить процесс</el-button>
     </el-row>    
   
@@ -70,17 +70,19 @@ export default {
 
     setup(){
 
+        let loading             = inject('loading');
         let process_id          = inject('process_id');
         let document_id         = inject('document_id');
         let user                = inject('user');
         let passing             = inject('passing');
-        let data                = inject('data');
+        let data                = inject('data_notify');
         let stages              = inject('stages');
         let stages_user         = inject('stages_user');
         let user_options        = reactive([]);
         let startfn             = inject('startfn');
         let stages_all_users    = inject('stages_all_users');
-
+        let full_access         = inject('full_access');
+        
         let getStagesUsers = async () => {
 
             let res = await req('/process/get-stages-user', {
@@ -119,8 +121,36 @@ export default {
         }
 
         const startProcess = async () => {
+
+            loading.value = true;
+
+            let error = 0;
+
+            await stages.forEach(stage => {
+                if(stage.blocks)
+                    stage.blocks.forEach(block => {
+                        if(+block.required){
+                            if(
+                                !stages_user[stage.id] || 
+                                !stages_user[stage.id][block.id] || 
+                                stages_user[stage.id][block.id].length == 0
+                            ){
+                              loading.value = false;
+                                ElNotification({
+                                    title: "Ошибка",
+                                    message: `Не указан сотрудник для этапа <br> '${stage.name}'`,
+                                    type: 'error',
+                                    dangerouslyUseHTMLString: true,
+                                    duration: 4000,
+                                })
+                                error++;
+                            }
+                        }                        
+                    });
+                    
+            });
             
-            if(stages[1] && stages_user[stages[1].id] || !stages[1] && stages_user[stages[0].id]){
+            if(error == 0){
 
                 let id = await req('/process/start-process', {
                     document_id : document_id,
@@ -130,39 +160,54 @@ export default {
                 });
 
                 if(id){
+                    loading.value       = false;
                     startfn();
                 }
-
-            } else {
-
-                if(stages[1] && stages_user[stages[1].id]){
-
-                    ElNotification({
-                        title: "Ошибка",
-                        message: `Этап '${stages[1].name}' не заполнен`,
-                        type: 'error',
-                        duration: 4000,
-                    })
-
-                }
-
-                if(!stages[1] && stages_user[stages[0].id]){
-
-                    ElNotification({
-                        title: "Ошибка",
-                        message: `Этап '${stages[0].name}' не заполнен`,
-                        type: 'error',
-                        duration: 4000,
-                    })
-                    
-                }                
-
             }
+
+            // if(stages[1] && stages_user[stages[1].id] || !stages[1] && stages_user[stages[0].id]){
+
+            //     let id = await req('/process/start-process', {
+            //         document_id : document_id,
+            //         process_id  : process_id,
+            //         user        : user,
+            //         data        : data
+            //     });
+
+            //     if(id){
+            //         startfn();
+            //     }
+
+            // } else {
+
+            //     if(stages[1] && stages_user[stages[1].id]){
+
+            //         ElNotification({
+            //             title: "Ошибка",
+            //             message: `Этап '${stages[1].name}' не заполнен`,
+            //             type: 'error',
+            //             duration: 4000,
+            //         })
+
+            //     }
+
+            //     if(!stages[1] && stages_user[stages[0].id]){
+
+            //         ElNotification({
+            //             title: "Ошибка",
+            //             message: `Этап '${stages[0].name}' не заполнен`,
+            //             type: 'error',
+            //             duration: 4000,
+            //         })
+                    
+            //     }                
+
+            // }
 
 
         }
 
-        return { stages , user_options, document_id, stages_user, passing, getStagesUsers, startProcess, stages_all_users}
+        return { stages , user_options, document_id, stages_user, passing, getStagesUsers, startProcess, full_access, stages_all_users}
     },
     methods: {
 

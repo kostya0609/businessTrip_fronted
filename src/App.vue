@@ -10,14 +10,13 @@
       <navBar v-if="navBarVisible"/>
       <router-view/>
     </div>
-
   </div>
 </template>
 
 <script>
 import navBar from "./components/navBar";
 import { useRouter, useRoute } from 'vue-router';
-import {ref, provide, reactive, computed} from "vue";
+import {ref, provide, reactive, computed, inject} from "vue";
 import  {ElNotification}  from 'element-plus'
 
 export default {
@@ -40,7 +39,11 @@ export default {
       `;
     const loading           = ref(false);
     const domain            = ref( process.env.NODE_ENV == 'production' ? window.location.origin + '/api' : 'http://localhost:8000');
+
     //const domain            = ref( 'https://bitrix.bsi.local/api');
+
+    const usersData         = reactive([]);//для расширенных прав
+
     const notify            = (title, message, type) => {
       ElNotification({
         title: title,
@@ -52,19 +55,22 @@ export default {
 
     const taskId            = ref(null);
     const taskStatus        = ref(null);
+    const full_access       = ref(0);
 
     const user              = reactive({
-      id         : null,
-      roles      : [],
-      fio        : null,
-      department : {id : null, name : null},
-      company    : {id : null, name : null},
-      position   : null,
+      id            : null,
+      roles         : [],
+      FIO           : null,
+      FIZ_LICO      : null,
+      department    : {id : null, name : null},
+      company       : [],
+      accountNumber : [],
+      position      : null,
     });
 
     const navBarVisible     = computed(() => {
       let currentRoute = router.currentRoute.value.name;
-      return['listTasks', 'listCities', 'listTargets', 'listUsers'].includes(currentRoute)
+      return['listTasks', 'listTasksNeedAction', 'listCities', 'listTargets', 'listUsers', 'ListCostUnits'].includes(currentRoute)
     });
 
     let paginationDataList  = reactive({page : 1, count : 10});
@@ -73,29 +79,39 @@ export default {
     let showValueListFilter = reactive([]);
     let activeProfileList   = ref(null);
 
+    let paginationDataListNeedAction  = reactive({page : 1, count : 10});
+    let sortDataListNeedAction        = reactive({name: "id", order: "desc"});
+    let filterDataListNeedAction      = reactive({});
+    let showValueListNeedActionFilter = reactive([]);
+    let activeProfileListNeedAction   = ref(null);
+
     const MAP = {
-      created         : 'Новое задание',
-      approving       : 'На согласовании',
-      fixing_problem  : 'На устранении замечаний',
-      signing         : 'На подписании',
-      working         : 'В работе',
-      archived        : 'Архив',
-      canceled        : 'Аннулирован',
-      completed       : 'Выполнено',
+      created          : 'На оформлении',
+      approving        : 'На согласовании',
+      fixing_problem   : 'На устранении замечаний',
+      signing          : 'На подписании',
+      working          : 'В работе',
+      report_approving : 'На утверждении отчета',
+      //archived        : 'В архиве',
+      canceled         : 'Аннулировано',
+      completed        : 'Выполнено',
     };
 
-    function loadJson(url , data, type, downloadRequest){
+    function loadJson(url , data, type, downloadRequest, no_api_domain){
       let body, header = {};
 
       if(type === 'file'){
+        window.token ? data.append('token', window.token) : '';
         body = data;
+
       }else{
+        window.token ? data.token = window.token : '';
         body = {...data};
         header['Content-Type'] = 'application/json;charset=utf-8';
       }
 
       return fetch(
-          domain.value + url,
+          no_api_domain ? domain.value.slice(0, -4) + url : domain.value  + url,
           {
             method: 'post',
             headers: header,
@@ -131,32 +147,31 @@ export default {
     async function initData(){
       window._userId ? user.id      = window._userId : user.id      = null;
       window._token  ? window.token = window._token  : window.token = null;
-    }
+    };
 
     async function auth(){
       loading.value = true;
       await initData();
       if (window.token) {
         setTimeout(() => {clearInterval(timerId.value)});
-
-        let result = await loadJson('/business-trip/users/get', {user_id: user.id, token : window.token});
-
+       let result = await loadJson('/business-trip/users/get', {user_id: user.id});
         if (result.status == 'success' && result.data) {
           user.roles.length = 0;
           result.data.roles.forEach(el => user.roles.push(el));
-          user.fio             = result.data.user.fio;
-          user.department.id   = result.data.user.department.id;
-          user.department.name = result.data.user.department.name;
-          user.company.id      = result.data.user.company.id;
-          user.company.name    = result.data.user.company.name;
+          user.FIO             = result.data.user.FIO;
+          user.FIZ_LICO        = result.data.user.FIZ_LICO;
+          user.department      = result.data.user.department;
+          user.company         = result.data.user.company;
           user.position        = result.data.user.position;
           isOK.value = true;
-        } else notify('Проблема с получением данных', 'Возникла ошибка с получением данных с сервера.', 'error');
+       } else notify('Проблема с получением данных', 'Возникла ошибка с получением данных с сервера.', 'error');
+
+        //isOK.value = true; //временно !!!!!!!!!!
 
         loading.value = false;
       } else {
         user.roles.length = 0;
-        user.fio          = null;
+        user.FIO          = null;
         user.department   = {id : null, name : null};
         user.company      = {id : null, name : null};
         user.position     = null;
@@ -166,6 +181,10 @@ export default {
       };
     };
     auth();
+
+    function formatNumber(number){
+      return (+number).toLocaleString('ru-RU',{ minimumFractionDigits: 2 });
+    };
 
     window.businessTripLoadFile = async (id, fileName, type) => {
       try {
@@ -191,12 +210,23 @@ export default {
 
     provide('taskId', taskId);
     provide('taskStatus', taskStatus);
+    provide('full_access', full_access);
     provide('user', user);
+    provide('usersData', usersData);
+
     provide('paginationDataList', paginationDataList);
     provide('sortDataList', sortDataList);
     provide('filterDataList', filterDataList);
     provide('showValueListFilter', showValueListFilter);
     provide('activeProfileList', activeProfileList);
+
+    provide('paginationDataListNeedAction', paginationDataListNeedAction);
+    provide('sortDataListNeedAction', sortDataListNeedAction);
+    provide('filterDataListNeedAction', filterDataListNeedAction);
+    provide('showValueListNeedActionFilter', showValueListNeedActionFilter);
+    provide('activeProfileListNeedAction', activeProfileListNeedAction);
+
+    provide('formatNumber', formatNumber);
 
     provide('MAP', MAP);
 
@@ -219,7 +249,7 @@ export default {
   overflow-x: unset !important;
 }
 .app_container{
-  padding: 15px;
+
 }
 #app ::selection {
   background: #cfcfcf;
@@ -228,6 +258,7 @@ export default {
 /*ниже класс для ссылок на загрузку файлов*/
 .businessTrip_vicarious{
   font-weight: bold;
+  color: #3bc8f5;
 }
 
 /*Общий класс - если не все поля на форме заполнены*/
@@ -250,8 +281,8 @@ small {
 }
 
 /*чтоб в таблицах переносились слова*/
-table.el-table__body td .cell {
-  word-break: break-word;
+.el-table .cell{
+  word-break: break-word!important;
 }
 
 /* ниже стили для отдельного компонента  - Меню navBar */
@@ -338,11 +369,17 @@ table.el-table__body td .cell {
 .add-edit-footer-button:hover{
   background: #3fddff !important;
 }
+
+.add-edit-footer-cancel-button{
+  width : 100%;
+  color : white !important;
+  text-transform: uppercase;
+}
+
 .two_fields{
   display: grid !important;
   grid-template-columns: 88% 10%;
   grid-gap: 2%;
-  margin-bottom: 10px;
 }
 
 .delete-scan-button {
@@ -362,6 +399,21 @@ span.userPhoto {
 }
 .userPhoto img{
   width: 32px;
+}
+
+.badgeItem {
+  position: absolute;
+  top: -15px;
+  right: 0px;
+  padding: 0 5px;
+  z-index: 10;
+  color: white;
+  background: #f56c6c;
+  border-radius: 20px;
+}
+
+.el-icon--close-tip {
+  display: none!important;;
 }
 
 /**/

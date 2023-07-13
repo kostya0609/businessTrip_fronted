@@ -184,7 +184,7 @@
             <el-button
                 :class="['add-edit-element', {'invalid' : errors.agreementFile}]"
             >
-              Соглашение об использовании автомобиля в личных целях
+              Соглашение об использовании автомобиля в служебных целях
             </el-button>
           </el-upload>
           <small v-if="errors.agreementFile">{{errors.agreementFile}}</small>
@@ -251,6 +251,15 @@
       </el-col>
     </el-row>
 
+    <el-link
+        v-if="value.auto_travel"
+        href="/workgroups/group/202/tasks/task/view/82254235/"
+        target="_blank"
+        type="primary"
+        style="margin-top: 25px"
+    >
+      Шаблон соглашения об использовании автомобиля в служебных целях
+    </el-link>
   </div>
 </template>
 
@@ -259,8 +268,8 @@
 import {reactive, inject, ref} from "vue";
 
 export default {
-  name: "addTripTrip",
-  props: ['value'],
+  name  : "addTripTrip",
+  props : ['value'],
   setup(props){
     const loadJson    = inject('loadJson');
     const svg         = inject('svg');
@@ -268,6 +277,7 @@ export default {
     const notify      = inject('notify');
 
     const loading            = ref(false);
+
     const uploadAgreement    = ref();
     const uploadAgreementBtn = (files) => {
       uploadAgreement.value.clearFiles()
@@ -319,7 +329,7 @@ export default {
           let url       = URL.createObjectURL(blob);
           let link      = document.createElement('a');
           link.href     = url;
-          link.download = file.name;
+          link.download = `${file.name}.${file.type}`;
 
           link.click();
           URL.revokeObjectURL(link.href);

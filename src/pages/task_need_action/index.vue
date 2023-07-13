@@ -10,9 +10,9 @@
         @gridReady="getData"
     />
 
-<!--            <el-button @click="sendDefaultFilterData">-->
-<!--              Загрузить дефолтовый фильтр-->
-<!--            </el-button>-->
+<!--    <el-button @click="sendDefaultFilterData">-->
+<!--      Загрузить дефолтовый фильтр-->
+<!--    </el-button>-->
 
   </div>
 </template>
@@ -21,36 +21,32 @@
 import {ref, inject, reactive, computed, provide} from "vue";
 import initGrid from '../../vdg3/use/initGrid';
 import Grid from '../../vdg3/components/grid.n.vue';
-import  {ElMessageBox }  from 'element-plus';
 import { useRouter } from 'vue-router';
 
 export default {
-  name       : "listIndex",
+  name       : "listNeedActionIndex",
   components : {Grid},
   setup(){
     const loadJson     = inject('loadJson');
     const svg          = inject('svg');
     const notify       = inject('notify');
     const domain       = inject('domain');
+
     const taskId       = inject('taskId');
-
-    const full_access  = inject('full_access');
-    full_access.value  = 0;
-
     taskId.value       = null;
-    const user         = inject('user');
 
+    const user         = inject('user');
     const router       = useRouter();
 
     const loading      = computed(() => { return dataGrid.loading });
 
-    let paginationData  = inject('paginationDataList');
-    let sortData        = inject('sortDataList');
-    let filterData      = inject('filterDataList');
-    let showValueFilter = inject('showValueListFilter');
-    let activeProfile   = inject('activeProfileList');
+    let paginationData  = inject('paginationDataListNeedAction');
+    let sortData        = inject('sortDataListNeedAction');
+    let filterData      = inject('filterDataListNeedAction');
+    let showValueFilter = inject('showValueListNeedActionFilter');
+    let activeProfile   = inject('activeProfileListNeedAction');
 
-    const name          = ref('businessTripList');
+    const name          = ref('businessTripListNeedAction');
     const content       = reactive({
       setting         : true,
       header          : {
@@ -161,36 +157,8 @@ export default {
         {
           text: 'Перейти в задание',
           function: (e, row) => {
-            full_access.value = row.row.full_access[0].value;
             taskId.value = row.row.id[0].value;
             router.push({name:'detailTask', params: { id: row.row.id[0].value}});
-          }
-        },
-        {
-          text: 'Редактировать задание',
-          function: (e, row) => {
-            if(!row.row.full_access[0].value){notify('Редактирование задания', 'У вас нет прав на редактирование задания', 'error'); return}
-
-            if (row.row.status_eng[0].value != 'created' && row.row.status_eng[0].value != 'fixing_problem') return notify('Редактирование задания', `Редактирование допускается только на этапе оформления или устранении замечаний! Текущий статус - ${row.row.status[0].value}.`, 'error');
-
-            ElMessageBox.confirm(`Вы уверены, что хотите редактировать задание с ID - ${row.row.id[0].value}?`)
-                .then(() => {
-                  taskId.value = row.row.id[0].value;
-                  router.push({name:'editTask', params: { id: row.row.id[0].value }});
-                })
-                .catch(() => {})
-          }
-        },
-        {
-          text: 'Удалить задание',
-          function: (e, row) => {
-            if(!row.row.full_access[0].value){notify('Удаление задания', 'У вас нет прав на удаление задания', 'error'); return}
-
-             if (row.row.status_eng[0].value != 'created' && row.row.status_eng[0].value != 'fixing_problem') return notify('Удаление задания', `Удаление задания допускается только на этапе оформления или устранении замечаний! Текущий статус - ${row.row.status[0].value}.`, 'error');
-
-            ElMessageBox.confirm(`Вы уверены, что хотите удалить задание с ID - ${row.row.id[0].value}?`)
-                .then(() => deleteTask(row.row.id[0].value))
-                .catch(() => {})
           }
         },
       ],
@@ -275,7 +243,7 @@ export default {
         });
       },
       sortContent     : function (sortData_new) {
-        //sortData_new.name === 'type' ? sortData_new.name = 'type_id' : '';
+        sortData_new.name === 'type' ? sortData_new.name = 'type_id' : '';
         Object.assign(sortData, sortData_new);
         getData();
       },
@@ -287,7 +255,7 @@ export default {
       dataGrid.loading = true;
 
       let gridElements = [];
-      let result = await loadJson('/business-trip/tasks/list', {
+      let result = await loadJson('/business-trip/tasks/list-action', {
         count   : dataGrid.pagination.defaultSize,
         page    : dataGrid.pagination.page,
         filter  : filter,
@@ -302,11 +270,6 @@ export default {
       dataGrid.methods.addElements(gridElements);
       dataGrid.loading = false;
     };
-
-    async function deleteTask(task_id){
-      let result = await loadJson('/business-trip/tasks/delete', {task_id, user_id : user.id});
-      if (result.status === 'success') await getData();
-    }
 
     //ниже чтоб на бэк залить дефолтовый фильтр... надо выше раскоментить нужную кнопку
     async function sendDefaultFilterData() {

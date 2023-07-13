@@ -8,7 +8,7 @@
                             <el-table :data="stages_user[item.id][block.id]" border class="mb-2" style="width: 100%">
                                 <el-table-column width="55">
                                 <template #default="scope">
-                                    <span class="userPhotoProcess">
+                                    <span class="userPhoto">
                                     <a :href="scope.row.user.link">
                                         <img :src="scope.row.user.photo" alt="фото"/>
                                     </a>
@@ -43,7 +43,7 @@
                 </span>
             </template>
         </el-dialog>
-        <el-button @click="dialogVisible = true" class="stop-process-button mb-1">Аннулировать процесс</el-button>
+        <el-button @click="dialogVisible = true" v-if="full_access" class="stop-process-button mb-1">Аннулировать процесс</el-button>
     </el-row>
 </template>
 
@@ -66,9 +66,12 @@ export default defineComponent({
         let startfn         = inject('startfn');
         let stop_comment    = ref('');
         let dialogVisible   = ref(false);
+        let loading         = inject('loading');
+        let full_access     = inject('full_access');
 
         let stopProcess = async () => {
-
+            dialogVisible.value = false
+            loading.value       = true;
             if (stop_comment.value && stop_comment.value != '') {
 
                 let res = await req('/process/stop-process', {
@@ -79,13 +82,14 @@ export default defineComponent({
                 });
 
                 if (res.status == 'success') {
+                    loading.value = false;
                     startfn();
                 }
 
-                dialogVisible.value = false
+                
 
             } else {
-
+                loading.value = false;
                 ElNotification({
                     title: "Ошибка",
                     message: "Не заполнена причина анулирования",
@@ -101,7 +105,7 @@ export default defineComponent({
             dialogVisible.value = false
         }
 
-        return { stages, stages_user, passing, process, user, stopProcess, stop_comment, dialogVisible, handleClose }
+        return { stages, stages_user, passing, process, user, stopProcess, stop_comment, dialogVisible, full_access, handleClose }
     }
 })
 </script>
@@ -120,16 +124,7 @@ ul.el-timeline.stagesusers {
     color: white !important;
     text-transform: uppercase;
 }
-.userPhotoProcess {
-    border-radius: 50%;
-   overflow: hidden;
-   display: block;
-   width: 32px;
-   height: 32px;
-}
-.userPhotoProcess img {
-    width: 32px;
-}
+
 .stop {
     display: inline-block;
     float: right;

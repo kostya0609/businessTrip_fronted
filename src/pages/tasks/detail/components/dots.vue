@@ -28,7 +28,7 @@
 import {ref} from "vue";
 
 export default {
-  name: "detailDots",
+  name  : "detailDots",
   props : ['value'],
   setup(){
     const page = ref(0);

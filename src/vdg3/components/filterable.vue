@@ -873,10 +873,10 @@ export default {
                           {},
                           [
                                     h(resolveComponent('el-scrollbar'), {class : 'vdg_filterMainContainer_scrollbar'},
-                                        h('div',{class : 'vdg_filterMainContainer' }, filterMain())
+                                        ()=> [h('div',{class : 'vdg_filterMainContainer' }, filterMain())]
                                     ),
-                                    h('div',{class : 'vdg_filterButtonContainer'},[
-                              h('div', {class : 'vdg_filterRow_fields'},
+                              h('div',{class : 'vdg_filterButtonContainer'},[
+                                h('div', {class : 'vdg_filterRow_fields'},
                                   [ this.showFilterDropMenuButton ?
                                       h('div',
                                           [
@@ -886,16 +886,15 @@ export default {
                                             ),
                                           ]) : '',
                                   ]),
-                              h(resolveComponent ('el-button'),
+                                h(resolveComponent ('el-button'),
                                   {class : ['vdg_filterRow_clearFilter', 'el-button', 'el-button--default'], onClick : $event => this.clear()},
                                   () => [this.filtered ? 'Сбросить' : 'Очистить']
-                              ),
-                              h( resolveComponent ('el-button'),
+                                ),
+                                h( resolveComponent ('el-button'),
                                   {class : ['vdg_filterRow_submitFilter','el-button', 'el-button--primary'],
-                                    onClick : $event => {this.onSubmit()}
-                                  },
-                                  'Найти'
-                              ),
+                                  onClick : $event => {this.onSubmit()}
+                                  },() => 'Найти'
+                                ),
                             ])
                           ],
                       ),
