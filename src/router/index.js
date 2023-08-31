@@ -131,7 +131,7 @@ const routes = [
         path: 'list/:page?',
         name: 'listUsers',
         component: ListUsers,
-        meta : {order : 6 ,name : 'Администраторы', forAdmin : true, path : '/business-trip/users/add', label : 'пользователя'},
+        meta : {order : 6 ,name : 'Администрирование', forAdmin : true, path : '/business-trip/users/add', label : 'пользователя'},
       },
       {
         path: 'add',

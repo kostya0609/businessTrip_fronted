@@ -11,7 +11,7 @@
       :key="doc.ID"
     >
       <el-link
-        :href="'/services/workflow/78/element_view/0/' + doc.ID + '/'"
+        :href="'/services/workflow/' + (doc.IBLOCK_ID ? doc.IBLOCK_ID : 78 )  + '/element_view/0/' + doc.ID + '/'"
         target="_blank"
       >
         {{doc.CATEGORY_NAME}} : {{doc.NAME}}

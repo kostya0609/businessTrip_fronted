@@ -72,6 +72,28 @@
           </el-col>
         </el-row>
       </el-tab-pane>
+      <el-tab-pane label="Согласующие свербюджет" name="over_budget">
+        <el-row>
+          <el-col :span="8">
+            <el-table
+                :data="tableData_over_budget"
+            >
+              <el-table-column  prop="name" label="ФИО"/>
+              <el-table-column  label=""  width="60">
+                <template #default="scope">
+                  <el-button
+                      size="small"
+                      type="danger"
+                      @click="userDelete(scope.$index, scope.row, userType='over_budget' )"
+                  >
+                    <el-icon><CloseBold /></el-icon>
+                  </el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+          </el-col>
+        </el-row>
+      </el-tab-pane>
     </el-tabs>
   </div>
 </template>
@@ -100,8 +122,9 @@ export default {
 
     let userType           = null;
 
-    const tableData_admin    = reactive([]);
-    const tableData_extended = reactive([]);
+    const tableData_admin       = reactive([]);
+    const tableData_extended    = reactive([]);
+    const tableData_over_budget = reactive([]);
 
     function userEdit(index, row){
       usersData.length =0;
@@ -112,7 +135,7 @@ export default {
     };
 
     function userDelete(index, row, userType){
-      let map = {admin : 'администратора', extended : 'расширнные права',};
+      let map = {admin : 'администратора', extended : 'расширнные права', over_budget : 'согласующего сверхбюджет'};
 
       ElMessageBox.confirm(`Вы уверены, что хотите удалить ${map[userType]} ${row.name} ?`)
           .then(async () => {
@@ -122,7 +145,10 @@ export default {
             loading.value = false
 
             if (result.status == 'success') {
-              userType === 'admin' ?  tableData_admin.splice(index,1) : tableData_extended.splice(index,1);
+              userType === 'admin'       ?  tableData_admin.splice(index,1) : '';
+              userType === 'extended'    ?  tableData_extended.splice(index,1) : '';
+              userType === 'over_budget' ?  tableData_over_budget.splice(index,1) : '';
+
               notify(`Удаление ${map[userType]}`, result.message, result.status)
             }
           })
@@ -140,12 +166,15 @@ export default {
 
         tableData_extended.length = 0;
         result.data.additional.forEach(el => {tableData_extended.push(el)})
+
+        tableData_over_budget.length = 0;
+        result.data.over_budget.forEach(el => {tableData_over_budget.push(el)})
       }
     };
     getData()
 
     return{
-      loading, svg, page, tableData_admin, userType, tableData_extended,
+      loading, svg, page, tableData_admin, userType, tableData_extended, tableData_over_budget,
       userDelete, userEdit
     }
   }

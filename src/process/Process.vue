@@ -44,12 +44,14 @@ export default {
         emit
     }) {
 
-        provide('data_notify',  props.config.data_notify);
-        provide('process_id',   props.config.process_id);
-        provide('document_id',  props.config.document_id);
-        provide('user',         props.config.user);
-        provide('subtitle',     props.config.subtitle);
-        provide('full_access',  props.config.full_access);
+        provide('data_notify',      props.config.data_notify);
+        provide('process_id',       props.config.process_id);
+        provide('document_id',      props.config.document_id);
+        provide('user',             props.config.user);
+        provide('subtitle',         props.config.subtitle);
+        provide('full_access',      props.config.full_access);
+        provide('update_process',   props.config.update_process);
+
         let subtitle            = props.config.subtitle;
         let process             = reactive({});
         let stages_user         = reactive({});
@@ -79,7 +81,8 @@ export default {
 
             var res = await req('/process/get-process-doc', {
                 document_id: props.config.document_id,
-                process_id: props.config.process_id
+                process_id: props.config.process_id,
+                update_process: props.config.update_process
             });
 
             if (res.status == 'success') {

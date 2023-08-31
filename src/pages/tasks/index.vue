@@ -4,7 +4,6 @@
        :element-loading-spinner="svg"
        element-loading-svg-view-box="-10, -10, 50, 50"
   >
-    <br/>
     <Grid
         :name="name"
         @gridReady="getData"
@@ -129,32 +128,34 @@ export default {
           width: 300,
           show: true,
           sort: 1100,
-          //contentSort: 'asc'
+          contentSort: 'asc'
         },
         dots                : {
           name: 'Посещаемые города',
           width: 300,
           show: true,
           sort: 1200,
-          //contentSort: 'asc'
-        },
+       },
         auto_travel        : {
           name: 'Командировка на личном авто',
           width: 270,
           show: true,
           sort: 1300,
+          contentSort: 'asc'
         },
         over_budget        : {
           name: 'Сверх бюджет',
           width: 250,
           show: true,
           sort: 1400,
+          contentSort: 'asc'
         },
         date_created        : {
           name: 'Дата создания',
           width: 400,
           show: true,
           sort: 1500,
+          contentSort: 'asc'
         },
       },
       context         : [
@@ -280,7 +281,7 @@ export default {
         getData();
       },
     });
-    const dataGrid     = initGrid(content);
+    const dataGrid      = initGrid(content);
     provide(name.value, dataGrid);
 
     async function getData(filter = filterData, sort = sortData){

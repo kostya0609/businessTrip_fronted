@@ -4,7 +4,6 @@
        :element-loading-spinner="svg"
        element-loading-svg-view-box="-10, -10, 50, 50"
   >
-    <br/>
     <Grid
         :name="name"
         @gridReady="getData"

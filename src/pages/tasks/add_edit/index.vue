@@ -10,7 +10,7 @@
     </div>
     <el-tabs type="border-card" v-model="page">
       <el-tab-pane name="user" key="user">
-        <template #label >
+        <template #label>
           <span :class="{'tab_red' : errors.user_tab}">
             <span>Информация о пользователе</span>
           </span>
@@ -199,7 +199,6 @@ export default {
       if (!task.accountant_id)      {valid = false; errors.accountant_id     = 'Необходимо указать бухгалтера за фин. отчетность!'};
 
       if (task.over_budget && task.files.overBudgetList.length === 0) {
-        console.log('1221',errors.overBudgetFile)
         valid = false; errors.overBudgetFile = 'Необходимо прикрепить файл "Командировка сверх бюджета"!'
       };
 
@@ -349,7 +348,7 @@ export default {
       task.files.overBudgetList.length ? errors.overBudgetFile = null : '';
 
       task.dots.length                ? errors.dots            = null : '';
-      errors.user_tab = (errors.responsible_id || errors.company_id || errors.department_id || errors.position || errors.checking_account) ? true : false;
+      errors.user_tab = (errors.responsible_id || errors.company_id || errors.department_id || errors.position || errors.checking_account || errors.overBudgetFile) ? true : false;
       errors.trip_tab = (errors.city_start_id || errors.city_final_id || errors.date_start || errors.date_final ||
       (task.auto_travel && (errors.mark || errors.model || errors.number || errors.gasoline || errors.back_distance || errors.agreementFile || errors.vicariousFile))) ? true : false;
       errors.dots_tab = (errors.dots || errors.dotsData) ? true : false;

@@ -302,6 +302,9 @@ small {
 .menu-right-element-button:hover{
   background: #3fddff !important;
 }
+.el-menu-item.menu-right-element{
+  padding-right: 0px!important;
+}
 .el-menu--horizontal .el-menu-item:focus{
   background-color: #ffffff!important;
 }
@@ -403,14 +406,19 @@ span.userPhoto {
 
 .badgeItem {
   position: absolute;
-  top: -15px;
+  top: -20px;
   right: 0px;
-  padding: 0 5px;
   z-index: 10;
   color: white;
   background: #f56c6c;
   border-radius: 20px;
-}
+  display: flex;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+  font-size: 12px!important;
+  width: 25px;
+  height: 25px;}
 
 .el-icon--close-tip {
   display: none!important;;

@@ -20,7 +20,13 @@
                         :count_days="data.count_days"
                         :auto_travel="data.auto_travel"
       />
-      <business_process v-if="page === 'business_process' && !loading" :value="data.task" :dots="data.dots" :over_budget="data.over_budget"/>
+      <business_process
+        v-if="page === 'business_process' && !loading"
+        :value="data.task"
+        :dots="data.dots"
+        :over_budget="data.over_budget"
+        :over_budget_approving="data.over_budget_approving"
+      />
       <logs             v-if="page === 'logs'             && !loading"/>
       <data_link_doc    v-if="page === 'data_link_doc'    && !loading" :value="data.data_link_doc"/>
       <additional_files v-if="page === 'additional_files' && !loading" v-model:value="data.additional_files"/>
@@ -131,10 +137,10 @@
           :key="element.ID"
         >
         <el-link
-          :href="'/services/workflow/78/element_view/0/' + element.ID + '/'"
+          :href="'/services/workflow/' + element.PROPERTY_762 ? '78' : '63' + '/element_view/0/' + element.ID + '/'"
           target="_blank"
         >
-          <strong>Поручение в СЭД, которые не дают изменить статус задания - {{element.NAME}}.</strong>
+          <strong>Поручение(ознакомление) в СЭД, которые не дают изменить статус задания - {{element.NAME}}.</strong>
         </el-link>
         </p>
       </el-col>
@@ -197,23 +203,25 @@ export default {
     });
 
     const data            = reactive({
-       auto_travel      : 0,
-       task             : [],
-       dots             : [],
-       route_sheet      : [],
-       estimate         : [],
-       data_link_doc    : [],
-       additional_files : {
+       auto_travel           : 0,
+       task                  : [],
+       dots                  : [],
+       route_sheet           : [],
+       estimate              : [],
+       data_link_doc         : [],
+       additional_files      : {
          file          : [],
          file_save     : [],
          file_exists   : [],
          filesChange   :false,
        },
-       plan_report_not  : [],
-       count_days       : null,
-       total_estimate   : null,
-       cancel_comment   : null,
-       full_access      : 0, //берем его в inject при переходе из грида из каждой строки в гриде, но он так же есть тут в данных деталки, если они отличаются то из деталки данные точнее (на бэке метод общий, отличий быть не должно, только при обновлении станицы)
+       plan_report_not       : [],
+       count_days            : null,
+       total_estimate        : null,
+       cancel_comment        : null,
+       full_access           : 0,
+       over_budget           : 0,
+       over_budget_approving : [],
     });
 
     const errors          = reactive({
@@ -367,23 +375,23 @@ export default {
       CED_elements.err_elements = [];
       CED_elements.err_text = '';
 
-      let block_id = 78;
-      let ids      = [];
+      let elements = [];
 
-      //получить ID поручений у этого задания
+      //получить поручения и ознакомления у этого задания
       loading.value = true;
       let result = await loadJson('/business-trip/work-follow/get', {task_id : route.params.id});
       loading.value = false;
-      if(result.status === 'success' && result.data) result.data.forEach(el => {ids.push(el.ID)})
+      if(result.status === 'success' && result.data) elements.push(...result.data)
 
       //получаем поручения с СЭД
-      if (ids.length > 0) {
+      if (elements.length > 0) {
         loading.value = true;
-        for await (let id of ids) {
+        for await (let el of elements) {
+          let IBLOCK_ID = el.IBLOCK_ID ? el.IBLOCK_ID : 78;
           let result = await loadJson('/local/rest/element/get/', {
-            ID            : id,
-            IBLOCK_ID     : block_id,
-            PROPERTIES_ID : [762],
+            ID            : el.ID,
+            IBLOCK_ID,
+            PROPERTIES_ID : IBLOCK_ID == 78 ? [762] : [379],
           }, '', '', true);
 
           if (result.status == 'success' && result.element) {
@@ -480,28 +488,26 @@ export default {
             if (!CED_elements.error ){
 
               CED_elements.elements.forEach(el => {
-                if(el.PROPERTY_762 != 5444192){
+                if(el.PROPERTY_762 && el.PROPERTY_762 != 5444192 || el.PROPERTY_379 && el.PROPERTY_379 != 3494909){
                   CED_elements.status_not_complete = true;
                   CED_elements.err_elements.push(el);
                 }
               });
 
               if(CED_elements.status_not_complete) {
-                CED_elements.err_text = `Не возможно аннулировать командировочное задание с ID - ${route.params.id} и изменить его статус на "Аннулировано", так как в СЭД некоторые поручения уже были выполнены.`;
-                notify('Изменение статуса командировочного задания', `Не возможно изменить статус командировочного задания, так как в СЭД некоторые поручения уже были выполнены.`, 'error');
+                CED_elements.err_text = `Не возможно аннулировать командировочное задание с ID - ${route.params.id} и изменить его статус на "Аннулировано", так как в СЭД некоторые поручения/ознакомление уже были выполнены.`;
+                notify('Изменение статуса командировочного задания', `Не возможно изменить статус командировочного задания, так как в СЭД некоторые поручения/ознакомления уже были выполнены.`, 'error');
                 setTimeout(() => {window.scrollTo(0,15000)},0);
                 return;
               };
 
-              let block_id = 78;
-              let ids = [];
-              CED_elements.elements.forEach((el) => ids.push(el.ID));
+              console.log(CED_elements);
 
               loading.value = true;
-              for await (let id of ids){
+              for await (let el of CED_elements.elements){
                 let result = await loadJson('/local/rest/element/setpropertyterminateprocess/', {
-                  IBLOCK_ID     : block_id,
-                  ID            : id,
+                  IBLOCK_ID     : el.PROPERTY_762 ? 78 : 63,
+                  ID            : el.ID,
                   PROPERTY_CODE : 'STATE',
                   VALUE         : 2504897,
                 }, '', '', true);

@@ -8,7 +8,7 @@
 <!--      <el-menu-item v-for="(item, key) in menu" :index="item.path" :key="key">{{item.name}}</el-menu-item>-->
       <template v-for="(item, key) in menu" :key="key">
         <el-menu-item :index="item.path.split('/:')[0]"> {{item.name}} </el-menu-item>
-        <span v-if="item.name == 'Требует вашей реакции'" style="position: relative"><span class="badgeItem"> {{needActions}}</span></span>
+        <span v-if="item.name == 'Требует вашей реакции' && needActions" style="position: relative"><span class="badgeItem"> {{needActions}}</span></span>
       </template>
 
       <el-menu-item

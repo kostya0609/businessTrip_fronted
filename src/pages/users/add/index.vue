@@ -352,7 +352,8 @@ export default {
             ;
           })
 
-          page === 'additional' ? page = 'extended' : ''
+          page === 'additional'  ? page = 'extended'    : ''
+          page === 'over_budget' ? page = 'over_budget' : ''
 
           router.push({name: 'listUsers', params : {page}});
         };

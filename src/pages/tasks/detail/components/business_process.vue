@@ -30,9 +30,9 @@
       </el-row>
 
       <p class="color-red">
-        При повторном согласовании (после возврата на корректировку), <span style="text-decoration: underline red">необходимо выбрать всех согласующих заново, независимо от того, приняли они уже решение или нет,</span> т.к. задание было отредактировано.
+        При повторном согласовании (после возврата на корректировку),необходимо выбрать всех согласующих заново, независимо от того, приняли они уже решение или нет, т.к. задание было отредактировано.
       </p>
-      <h3>Согласующие:</h3>
+      <p style="text-decoration: underline">Согласующие:</p>
       <ul style="list-style: none">
         <li>
           - <strong>Непосредственный руководитель</strong> командируемого сотрудника:
@@ -47,19 +47,7 @@
         </li>
         <br/>
         <li>
-          - <strong>Руководитель подразделения/ направления</strong> командируемого сотрудника:
-          <ul style="list-style: square">
-            <li>
-              согласовывает план командировки по существу (цель, задачи, сроки, маршрут);
-            </li>
-            <li>
-              отвечает за минимизацию расходов по смете (оптимальный подбор перевозчика, отсутствие "лишних дней", отсутствие использования такси.
-            </li>
-          </ul>
-        </li>
-        <br/>
-        <li>
-          - <strong>Бухгалтер соответствующего направления</strong>:
+          - <strong>Бухгалтер соответствующего направления:</strong>
           <ul style="list-style: square">
             <li>
               проверяет актуальность цели для данной организации и должности;
@@ -72,9 +60,10 @@
             </li>
           </ul>
         </li>
+        <br/>
       </ul>
       <p class="color-red" style="text-decoration: underline red">
-        В случае, если командировка не была утверждена в бюджете, в ОБЯЗАТЕЛЬНОМ ПОРЯДКЕ в согласующие добавляются:
+        В случае, если командировка не была утверждена в бюджете, в обязательном порядке в согласующие добавляются:
       </p>
       <ul style="list-style: none">
         <li>
@@ -85,27 +74,27 @@
             </li>
           </ul>
         </li>
+      </ul>
+      <p style="text-decoration: underline">
+        Подписант:
+      </p>
+      <ul style="list-style: none">
         <li>
-          - <strong>Генеральный директор Компании</strong>
+          - <strong>Руководитель подразделения/ направления</strong> командируемого сотрудника:
           <ul style="list-style: square">
             <li>
-              принимает решение по внебюджетной командировке.
+              согласовывает план командировки по существу (цель, задачи, сроки, маршрут);
+            </li>
+            <li>
+              отвечает за минимизацию расходов по смете (оптимальный подбор перевозчика, отсутствие "лишних дней", отсутствие использования такси.
             </li>
           </ul>
         </li>
-      </ul>
-      <h3>
-        Подписант:
-      </h3>
-      <ul style="list-style: none">
         <li>
-          - <strong>Руководитель – держатель бюджета</strong>:
+          - <strong>Генеральный директор Компании</strong> (в случае командировки вне бюджета):
           <ul style="list-style: square">
             <li>
-              контролирует минимизацию расходов по смете;
-            </li>
-            <li>
-              принимает решение по командировке.
+              согласовывает план командировки по существу (цель, задачи, сроки, маршрут);
             </li>
           </ul>
         </li>
@@ -122,7 +111,7 @@ import Process from "../../../../process/Process"
 import { useRoute } from 'vue-router';
 export default {
   name  : "process",
-  props : ['value', 'dots', 'over_budget'],
+  props : ['value', 'dots', 'over_budget', 'over_budget_approving'],
   components: {Process},
   setup(props){
     const route             = useRoute();
@@ -161,10 +150,16 @@ export default {
       user           : user.id,
       subtitle       : [sub_title.title],
       full_access    : full_access.value,
-      update_process : props.over_budget ? [ //данные чтоб добавить/заменить согласованта/утвержданта в процесс
+      update_process : props.over_budget && taskStatus.value === 'created' ? [ //данные чтоб добавить/заменить согласованта/утвержданта в процесс
         {
-          stage_id        : 777,
-          stage_option_id : 777,
+          stage_id        : 11,
+          block_id        : 14,
+          users           : props.over_budget_approving,
+          action          : 'add' // replace
+        },
+        {
+          stage_id        : 12,
+          block_id        : 15,
           users           : [6362],
           action          : 'add' // replace
         },
@@ -208,7 +203,7 @@ export default {
       };
 
       //обновляем статус командировки от модуля согласования если прошло изменение
-      if (!['canceled', 'report_approving', 'completed'].includes(taskStatus.value) && status[item.status_current] && taskStatus.value != status[item.status_current]) {
+      if (!['canceled', 'report_approving', 'completed'].includes(taskStatus.value) && status[item.status_current] && taskStatus.value !== status[item.status_current]) {
         loading.value = true;
         let result = await loadJson('/business-trip/change-status', {
           task_id : route.params.id,

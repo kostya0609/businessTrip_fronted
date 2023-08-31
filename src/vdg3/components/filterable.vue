@@ -713,6 +713,7 @@ export default {
                                 reserveKeyword : true,
                                 loading : false,
                                 remoteMethod : async (query) => {
+                                  if(!query) return;
                                   this.grid.loading = true;
                                   let newOption = [];
                                   await this.grid.filter.data[dataValue.key].query ? newOption = await this.grid.filter.data[dataValue.key].query(query) : [];
